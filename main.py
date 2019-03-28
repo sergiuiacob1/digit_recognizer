@@ -1,8 +1,18 @@
 import pandas as pd
+from PIL import Image
 
 
-def read_data():
-    data = pd.read_csv("./data/train.csv")
-    data.to_csv()
+def readData():
+    data = pd.read_csv("./data/small_train.csv")
+    return data
 
-read_data()
+
+def createImage(pixelValues):
+    imgSize = 28
+    img = Image.new("L", (imgSize, imgSize))
+    img.putdata(pixelValues)
+    return img
+
+
+data = readData()
+img = createImage(data.head(1).values[0])
