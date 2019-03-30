@@ -6,14 +6,18 @@ from network import Network
 
 
 def readTrainingData():
-    data = pd.read_csv("./data/small_train.csv")
+    data = pd.read_csv("./data/train.csv")
     features = data.values[:, 1:]
-    outputs = data.values[:, 0]
+    outputs = [vectorized_result(x) for x in data.values[:,0]]
     return [(feature, output) for feature, output in zip(features, outputs)]
 
+def vectorized_result(x):
+    res = np.zeros((10, 1))
+    res[x] = 1
+    return res
 
 # def readTestData():
-#     data = pd.read_csv("./data/test.csv")
+#     data = pd.read_csv("./data/train.csv")
 #     features = data.values[:, 1:]
 #     outputs = data.values[:, 0]
 #     return [(feature, output) for feature, output in zip(features, outputs)]
@@ -30,18 +34,18 @@ def normalizeData(data):
     """``data`` is a list of tuples (features, output)"""
     features = np.asarray([x[0].astype(float) for x in data])
     outputs = [x[1] for x in data]
-    maxValues = np.amax(features, axis=1, keepdims=True)
+    maxValues = np.amax(features, axis=1).reshape(len(features), 1)
     features[:, ] /= maxValues
     return [(x.reshape(len(x), 1), y) for x, y in zip(features, outputs)]
 
 
 def main():
-    data = readTrainingData()
-    data = normalizeData(data)
-    training_data = data[1:len(data) - 10000]
-    validation_data = data[-10000:]
+    training_data = readTrainingData()
+    training_data = normalizeData(training_data)
+    test_data = training_data[0:1000]
+
     net = Network([784, 10, 10])
-    net.SGD(training_data, 1, 10, 3.0, test_data=validation_data)
+    net.SGD(training_data, 30, 10, 3.0, test_data=test_data)
 
 
 main()

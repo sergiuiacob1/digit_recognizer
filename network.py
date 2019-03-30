@@ -52,7 +52,7 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
-        if test_data:
+        if test_data is not None:
             n_test = len(test_data)
         n = len(training_data)
         for j in range(epochs):
@@ -62,7 +62,7 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
-            if test_data:
+            if test_data is not None:
                 print("Epoch {0}: {1} / {2}".format(
                     j, self.evaluate(test_data), n_test))
             else:
@@ -126,7 +126,7 @@ class Network(object):
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
-        return sum([int(x == y) for (x, y) in test_results])
+        return sum([int(x == np.argmax(y)) for (x, y) in test_results])
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives partial C_x /
