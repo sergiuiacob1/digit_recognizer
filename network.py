@@ -9,12 +9,9 @@ simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
 """
 
-# Libraries
-# Standard library
 import random
-
-# Third-party libraries
 import numpy as np
+import _pickle as pickle
 
 
 class Network(object):
@@ -32,9 +29,12 @@ class Network(object):
         ever used in computing the outputs from later layers."""
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+        f = open("parameters.txt", "rb")
+        serialized = f.read()
+        (self.weights, self.biases) = pickle.loads(serialized)
+        # self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
+        # self.weights = [np.random.randn(y, x)
+        #                 for x, y in zip(sizes[:-1], sizes[1:])]
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -52,6 +52,9 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
+        bestWeights = None
+        bestBiases = None
+        bestCost = None
         if test_data is not None:
             n_test = len(test_data)
         n = len(training_data)
@@ -63,10 +66,17 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data is not None:
-                print("Epoch {0}: {1} / {2}".format(
-                    j, self.evaluate(test_data), n_test))
+                nailedCases = self.evaluate(test_data)
+                cost = n_test - nailedCases
+                print("Epoch {0}: {1}/{2}".format(j, nailedCases, n_test))
+
+                if bestCost is None or (bestCost is not None and bestCost > cost):
+                    bestCost = cost
+                    bestBiases = self.biases
+                    bestWeights = self.weights
             else:
                 print("Epoch {0} complete".format(j))
+        return (bestWeights, bestBiases)
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -127,6 +137,9 @@ class Network(object):
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
         return sum([int(x == np.argmax(y)) for (x, y) in test_results])
+
+    def predict(self, test_data):
+        return [np.argmax(self.feedforward(x)) for x in test_data]
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives partial C_x /
